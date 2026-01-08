@@ -1,0 +1,13 @@
+.site-footer {
+  width: 100%;
+  padding: 2rem 1rem;
+  background-color: #0f0f0f;
+  color: #e3e3db;
+  text-align: center;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+
+.site-footer strong {
+  font-weight: 700;
+}
