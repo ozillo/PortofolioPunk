@@ -1,13 +1,17 @@
+import FullScreenMenu from "./components/FullScreenMenu/FullScreenMenu";
 import Hero from "./components/Hero/Hero";
 import About from "./components/About/About";
 
-function App() {
+export default function App() {
   return (
     <>
-      <Hero />
-      <About />
+      <FullScreenMenu brand="Punk i Apart" />
+      <main>
+        <Hero />
+        <section id="about">
+          <About />
+        </section>
+      </main>
     </>
   );
 }
-
-export default App;

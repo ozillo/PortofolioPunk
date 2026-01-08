@@ -6,10 +6,16 @@ html, body {
 }
 
 body {
-  display: block; /* MUY IMPORTANTE: quita el flex del template */
+  display: block;
+  overflow-x: hidden; /* ✅ evita scroll lateral raro */
 }
 
 #root {
   width: 100%;
   height: 100%;
+}
+
+/* ✅ para anchors con header fijo */
+#hero, #about {
+  scroll-margin-top: 80px;
 }

@@ -1,14 +1,26 @@
-/* Base */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+@import url("https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@700;900&display=swap");
 
-a, p, span {
+/* ===============================
+   BASE
+================================ */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+a,
+p,
+span {
   text-transform: uppercase;
   font-size: 10px;
   line-height: 100%;
   cursor: pointer;
 }
 
-/* NAV (barra superior) */
+/* ===============================
+   HEADER (TRANSPARENTE)
+================================ */
 .kp-nav {
   position: fixed;
   top: 0;
@@ -18,9 +30,10 @@ a, p, span {
   justify-content: space-between;
   align-items: center;
   padding: 0 2em;
-  z-index: 9999;
-  background: rgba(15,15,15,0.65);
-  backdrop-filter: blur(8px);
+  z-index: 10001;
+
+  background: transparent;
+  backdrop-filter: none;
   color: #e3e3db;
 }
 
@@ -28,6 +41,7 @@ a, p, span {
   background: transparent;
   border: 0;
   color: #e3e3db;
+  cursor: pointer;
 }
 
 .nav-title {
@@ -36,34 +50,39 @@ a, p, span {
   letter-spacing: 0.06em;
 }
 
-/* Contenedor */
-.kp-container {
-  width: 100%;
-  height: 100%;
-}
-
-/* Panel lateral (igual ZIP) */
-.menu-container {
+/* ===============================
+   FULLSCREEN MENU (FADE)
+================================ */
+.fs-menu {
   position: fixed;
-  top: 50%;
-  left: -100%;
-  transform: translateY(-50%);
-  padding: 1.5em;
-  width: 45%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9998;
-  transition: left 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 10000;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
 }
 
+/* abierto */
+.fs-menu.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* cerrando (fade out) */
+.fs-menu.closing {
+  opacity: 0;
+}
+
+/* ===============================
+   MENU LAYOUT
+================================ */
 .menu {
   width: 100%;
   height: 100%;
   background: #000;
   color: #fff;
-  border-radius: 20px;
   display: flex;
   overflow: hidden;
 }
@@ -84,7 +103,9 @@ a, p, span {
   justify-content: space-between;
 }
 
-/* top */
+/* ===============================
+   TOP
+================================ */
 .menu-main .menu-top {
   display: flex;
   border-top: 1px solid rgba(255, 255, 255, 0.125);
@@ -102,12 +123,23 @@ a, p, span {
   flex-direction: column;
 }
 
-/* items */
+/* ===============================
+   MENU ITEMS
+================================ */
 .menu-item {
   position: relative;
-  left: -100px;
   padding: 0.5em 0;
-  transition: left 0.3s;
+
+  /* animación entrada */
+  transform: translateX(-60px);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+/* cuando el menú está abierto */
+.fs-menu.open .menu-item {
+  transform: translateX(0);
+  opacity: 1;
 }
 
 .menu-item-link {
@@ -130,35 +162,57 @@ a, p, span {
   color: #000;
 }
 
-/* bg hover (clip-path igual ZIP) */
+/* ===============================
+   BG HOVER (CLIP-PATH)
+================================ */
 .bg-hover {
   position: absolute;
   top: 0;
   left: 0;
   height: 100%;
   background-color: #fff;
-  clip-path: polygon(0 0, 100% 0, 100% 80%, 95% 100%, 0 100%, 0% 50%);
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% 80%,
+    95% 100%,
+    0 100%,
+    0% 50%
+  );
   z-index: 0;
   opacity: 0;
+  transition: opacity 0.15s ease;
 }
 
 .menu-item:hover .bg-hover {
   opacity: 1;
 }
 
-/* meta a la derecha */
+/* ===============================
+   META TEXT (DERECHA)
+================================ */
 .menu-item span {
   position: absolute;
-  top: 0px;
+  top: 0;
   padding: 1.5em 0;
 }
 
 /* SplitType colors */
-.menu-item span .word .char { color: #000; }
-.menu-item span .word .char.char-active { color: #000; }
-.menu-item:hover span .word .char.char-active { color: #fff; }
+.menu-item span .word .char {
+  color: #000;
+}
 
-/* bottom */
+.menu-item span .word .char.char-active {
+  color: #000;
+}
+
+.menu-item:hover span .word .char.char-active {
+  color: #fff;
+}
+
+/* ===============================
+   BOTTOM
+================================ */
 .menu-bottom {
   display: flex;
   flex-direction: column;
@@ -172,11 +226,20 @@ a, p, span {
   padding: 1em 2em;
 }
 
-.menu-title { flex: 1; }
-.menu-content { flex: 4; padding-left: 2em; }
+.menu-title {
+  flex: 1;
+}
 
-/* sidebar */
-.close-btn, .logo {
+.menu-content {
+  flex: 4;
+  padding-left: 2em;
+}
+
+/* ===============================
+   SIDEBAR
+================================ */
+.close-btn,
+.logo {
   padding: 1.5em;
 }
 
@@ -196,12 +259,10 @@ a, p, span {
   font-weight: 900;
 }
 
-/* Mobile (igual ZIP: simplifica y quita spans/bg) */
+/* ===============================
+   MOBILE
+================================ */
 @media (max-width: 900px) {
-  .menu-container { width: 100%; }
-
-  .menu-top-content { padding: 1.5em; }
-
   .menu-top-title,
   .menu-item span,
   .menu-title,
@@ -209,9 +270,15 @@ a, p, span {
     display: none;
   }
 
+  .menu-top-content {
+    padding: 1.5em;
+  }
+
+  .menu-item-link a {
+    font-size: 14vw;
+  }
+
   .menu-item:hover .menu-item-link a {
     color: #fff;
   }
-
-  .menu-sub-item { padding: 1em 0; }
 }
