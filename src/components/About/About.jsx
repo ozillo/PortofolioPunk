@@ -7,6 +7,7 @@ gsap.registerPlugin(SplitText);
 
 export default function About() {
   const rootRef = useRef(null);
+  const base = import.meta.env.BASE_URL;
 
   useEffect(() => {
     const root = rootRef.current;
@@ -18,7 +19,7 @@ export default function About() {
       const nameElements = root.querySelectorAll(".profile-names .name");
       const nameHeadings = root.querySelectorAll(".profile-names .name h1");
 
-      // SplitText EXACTO (como tu script)
+      // SplitText EXACTO
       const splits = [];
       nameHeadings.forEach((heading) => {
         const split = new SplitText(heading, { type: "chars" });
@@ -26,10 +27,16 @@ export default function About() {
         splits.push(split);
       });
 
+      // Default "El grup" entra/sale al hover de la fila
       const defaultLetters = nameElements[0].querySelectorAll(".letter");
       gsap.set(defaultLetters, { y: "100%" });
 
-      // Desktop behavior exacto
+      // ✅ Asegura estado inicial de TODOS los nombres (evita que en build se queden “fuera”)
+      for (let i = 1; i < nameElements.length; i++) {
+        const letters = nameElements[i].querySelectorAll(".letter");
+        gsap.set(letters, { y: "0%" });
+      }
+
       if (window.innerWidth >= 900) {
         const cleanups = [];
 
@@ -104,15 +111,12 @@ export default function About() {
           profileImagesContainer.removeEventListener("mouseleave", onContainerLeave);
         });
 
-        // Cleanup total (React)
         return () => {
           cleanups.forEach((fn) => fn());
-          // Revert SplitText (super importante para que no se “duplique” en dev)
           splits.forEach((s) => s.revert());
         };
       }
 
-      // Cleanup si no es desktop
       return () => {
         splits.forEach((s) => s.revert());
       };
@@ -122,12 +126,12 @@ export default function About() {
   }, []);
 
   return (
-    <section className="team" ref={rootRef}>
+    <section className="team" ref={rootRef} id="about">
       <div className="profile-images">
-        <div className="img"><img src="/img10.jpg" alt="" /></div>
-        <div className="img"><img src="/img11.jpg" alt="" /></div>
-        <div className="img"><img src="/img12.jpg" alt="" /></div>
-        <div className="img"><img src="/img13.jpg" alt="" /></div>
+        <div className="img"><img src={`${base}img10.jpg`} alt="" /></div>
+        <div className="img"><img src={`${base}img11.jpg`} alt="" /></div>
+        <div className="img"><img src={`${base}img12.jpg`} alt="" /></div>
+        <div className="img"><img src={`${base}img13.jpg`} alt="" /></div>
       </div>
 
       <div className="profile-names">

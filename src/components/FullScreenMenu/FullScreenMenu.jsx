@@ -6,51 +6,141 @@ export default function FullScreenMenu({
   brand = "Punk i Apart",
   items: itemsProp,
 }) {
-  const menuRef = useRef(null);
   const menuItemsRef = useRef([]);
   const splitInstancesRef = useRef([]);
+  const closeTimerRef = useRef(null);
+
+  // Bloqueo scroll pro
+  const prevOverflowRef = useRef("");
+  const prevPaddingRightRef = useRef("");
+
   const [open, setOpen] = useState(false);
+  const [closing, setClosing] = useState(false);
 
   const items = useMemo(
     () =>
       itemsProp ?? [
-        { label: "HERO", meta: "go now", href: "#hero" },
-        { label: "ABOUT", meta: "read", href: "#about" },
+        { label: "NOU TEMA", meta: "gaudeix", href: "#hero" },
+        { label: "EL GRUP", meta: "veure", href: "#about" },
+        { label: "MÚSICA", meta: "escolta", href: "#music" },
       ],
     [itemsProp]
   );
 
-  /* ---------------- Split + hover ---------------- */
+  /* ---------- Helpers ---------- */
+  const animateMenuItems = (direction = "in") => {
+    menuItemsRef.current.forEach((item, index) => {
+      if (!item) return;
+      setTimeout(() => {
+        item.style.left = direction === "in" ? "0px" : "-100px";
+      }, index * 50);
+    });
+  };
+
+  const addShuffleEffect = (element) => {
+    if (!element) return;
+    const chars = element.querySelectorAll(".char");
+    if (!chars.length) return;
+
+    const originalText = [...chars].map((c) => c.textContent);
+    const shuffleInterval = 10;
+    const resetDelay = 75;
+    const additionalDelay = 150;
+
+    chars.forEach((char, index) => {
+      setTimeout(() => {
+        const interval = setInterval(() => {
+          char.textContent = String.fromCharCode(
+            97 + Math.floor(Math.random() * 26)
+          );
+        }, shuffleInterval);
+
+        setTimeout(() => {
+          clearInterval(interval);
+          char.textContent = originalText[index];
+        }, resetDelay + index * additionalDelay);
+      }, index * shuffleInterval);
+    });
+  };
+
+  const shuffleAll = () => {
+    menuItemsRef.current.forEach((item) => {
+      if (!item) return;
+      const a = item.querySelector(".menu-item-link a");
+      const span = item.querySelector("span");
+      addShuffleEffect(a);
+      addShuffleEffect(span);
+    });
+  };
+
+  const colorChars = (chars) => {
+    chars.forEach((char, index) => {
+      setTimeout(() => char.classList.add("char-active"), index * 50);
+    });
+  };
+
+  const clearColorChars = (chars) => {
+    chars.forEach((char) => char.classList.remove("char-active"));
+  };
+
+  /* ---------- TOQUE PRO: bloquear scroll mientras open ---------- */
+  useEffect(() => {
+    if (!open) return;
+
+    const body = document.body;
+    prevOverflowRef.current = body.style.overflow;
+    prevPaddingRightRef.current = body.style.paddingRight;
+
+    const scrollbarWidth =
+      window.innerWidth - document.documentElement.clientWidth;
+
+    body.style.overflow = "hidden";
+    if (scrollbarWidth > 0) body.style.paddingRight = `${scrollbarWidth}px`;
+
+    return () => {
+      body.style.overflow = prevOverflowRef.current || "";
+      body.style.paddingRight = prevPaddingRightRef.current || "";
+    };
+  }, [open]);
+
+  /* ---------- SplitType (solo cuando está abierto) ---------- */
   useEffect(() => {
     if (!open) return;
 
     splitInstancesRef.current.forEach((s) => s?.revert?.());
     splitInstancesRef.current = [];
 
-    const linkSplit = new SplitType(".fs-menu .menu-item a", {
-      types: "words, chars",
-    });
-    const spanSplit = new SplitType(".fs-menu .menu-item span", {
-      types: "words, chars",
-    });
-
+    const linkSplit = new SplitType(".menu-item a", { types: "words, chars" });
+    const spanSplit = new SplitType(".menu-item span", { types: "words, chars" });
     splitInstancesRef.current.push(linkSplit, spanSplit);
 
     const raf = requestAnimationFrame(() => {
       menuItemsRef.current.forEach((item) => {
         if (!item) return;
 
-        item.style.transform = "translateX(0)";
-        item.style.opacity = "1";
+        const linkEl = item.querySelector(".menu-item-link a");
+        const bg = item.querySelector(".menu-item-link .bg-hover");
+        const spanEl = item.querySelector("span");
 
-        const link = item.querySelector("a");
-        const bg = item.querySelector(".bg-hover");
-        const span = item.querySelector("span");
+        if (!linkEl || !bg) return;
 
-        if (!link || !bg) return;
+        const width = linkEl.offsetWidth;
+        bg.style.width = width + 30 + "px";
+        if (spanEl) spanEl.style.left = width + 40 + "px";
 
-        bg.style.width = link.offsetWidth + 30 + "px";
-        if (span) span.style.left = link.offsetWidth + 40 + "px";
+        const chars = item.querySelectorAll("span .char");
+        linkEl.addEventListener("mouseenter", () => colorChars(chars));
+        linkEl.addEventListener("mouseleave", () => clearColorChars(chars));
+      });
+
+      menuItemsRef.current.forEach((item) => {
+        if (!item) return;
+        item.addEventListener("mouseenter", () => {
+          const a = item.querySelector(".menu-item-link a");
+          const span = item.querySelector("span");
+          addShuffleEffect(a);
+          addShuffleEffect(span);
+        });
       });
     });
 
@@ -59,27 +149,41 @@ export default function FullScreenMenu({
       splitInstancesRef.current.forEach((s) => s?.revert?.());
       splitInstancesRef.current = [];
     };
-  }, [open]);
+  }, [open, items]);
 
-  /* ---------------- Open / Close ---------------- */
-  const openMenu = () => setOpen(true);
+  /* ---------- Open / Close (fade con tu CSS) ---------- */
+  const openMenu = () => {
+    if (closeTimerRef.current) {
+      clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+    setClosing(false);
+    setOpen(true);
 
-  const closeMenu = () => {
-    if (!menuRef.current) return;
-    menuRef.current.classList.add("closing");
-
-    setTimeout(() => {
-      menuRef.current.classList.remove("closing");
-      setOpen(false);
-    }, 300); // ⏱ mismo tiempo que el CSS
+    requestAnimationFrame(() => {
+      shuffleAll();
+      animateMenuItems("in");
+    });
   };
 
-  /* ---------------- Close on scroll ---------------- */
+  const closeMenu = () => {
+    if (!open || closing) return;
+
+    setClosing(true);
+    animateMenuItems("out");
+
+    closeTimerRef.current = setTimeout(() => {
+      setOpen(false);
+      setClosing(false);
+      closeTimerRef.current = null;
+    }, 300);
+  };
+
+  /* ---------- Cerrar al hacer scroll / wheel / touchmove ---------- */
   useEffect(() => {
     if (!open) return;
 
     const close = () => closeMenu();
-
     window.addEventListener("scroll", close, { passive: true });
     window.addEventListener("wheel", close, { passive: true });
     window.addEventListener("touchmove", close, { passive: true });
@@ -89,46 +193,56 @@ export default function FullScreenMenu({
       window.removeEventListener("wheel", close);
       window.removeEventListener("touchmove", close);
     };
-  }, [open]);
+  }, [open, closing]);
 
-  /* ---------------- ESC ---------------- */
+  /* ---------- ESC ---------- */
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && closeMenu();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    const onKeyDown = (e) => e.key === "Escape" && closeMenu();
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, closing]);
+
+  /* ---------- Cleanup ---------- */
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+      splitInstancesRef.current.forEach((s) => s?.revert?.());
+      splitInstancesRef.current = [];
+    };
   }, []);
 
   return (
     <>
-      {/* HEADER */}
       <nav className="kp-nav">
-        <button className="menu-toggle" onClick={openMenu}>
-          Menu
+        <button className="menu-toggle" onClick={openMenu} aria-label="Open menu">
+          <p>Menu</p>
         </button>
         <p className="nav-title">{brand}</p>
       </nav>
 
-      {/* FULLSCREEN MENU */}
       {open && (
-        <div
-          ref={menuRef}
-          className="fs-menu open"
-          onClick={closeMenu}
-        >
-          {/* parar cierre dentro */}
+        <div className={`fs-menu open ${closing ? "closing" : ""}`}>
+          {/* ✅ ESTO ES EL “FUERA” CLICKABLE */}
+          <button
+            className="fs-backdrop"
+            onClick={closeMenu}
+            aria-label="Close menu"
+          />
+
+          {/* ✅ ESTO ES EL PANEL (no ocupa toda la pantalla) */}
           <div className="menu" onClick={(e) => e.stopPropagation()}>
             <div className="menu-main">
               <div className="menu-top">
                 <div className="menu-top-title">
-                  <p>discover</p>
+                
                 </div>
 
                 <div className="menu-top-content">
-                  {items.map((it, i) => (
+                  {items.map((it, idx) => (
                     <div
-                      key={it.label}
                       className="menu-item"
-                      ref={(el) => (menuItemsRef.current[i] = el)}
+                      key={it.label}
+                      ref={(node) => (menuItemsRef.current[idx] = node)}
                     >
                       <div className="menu-item-link">
                         <div className="bg-hover" />
@@ -143,12 +257,25 @@ export default function FullScreenMenu({
               </div>
 
               <div className="menu-bottom">
-                <p>© {new Date().getFullYear()} {brand}</p>
+                <div className="menu-sub-item">
+                  <div className="menu-title">
+                    <p>©</p>
+                  </div>
+                  <div className="menu-content">
+                    <p>
+                      {new Date().getFullYear()} {brand}
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
             <div className="menu-sidebar">
-              <button className="close-btn" onClick={closeMenu}>
+              <button
+                className="close-btn"
+                onClick={closeMenu}
+                aria-label="Close menu"
+              >
                 ✕
               </button>
               <div className="logo">PA</div>

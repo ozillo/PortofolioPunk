@@ -64,21 +64,33 @@ span {
   transition: opacity 0.3s ease;
 }
 
-/* abierto */
 .fs-menu.open {
   opacity: 1;
   pointer-events: auto;
 }
 
-/* cerrando (fade out) */
 .fs-menu.closing {
   opacity: 0;
 }
 
 /* ===============================
-   MENU LAYOUT
+   BACKDROP (CLICK FUERA)
+================================ */
+.fs-backdrop {
+  position: absolute;
+  inset: 0;
+  background: transparent; /* el negro ya lo pone .fs-menu */
+  border: 0;
+  cursor: pointer;
+  z-index: 0;
+}
+
+/* ===============================
+   MENU PANEL
 ================================ */
 .menu {
+  position: relative;      /* 🔑 necesario */
+  z-index: 1;              /* 🔑 por encima del backdrop */
   width: 100%;
   height: 100%;
   background: #000;
@@ -136,7 +148,6 @@ span {
   transition: transform 0.4s ease, opacity 0.4s ease;
 }
 
-/* cuando el menú está abierto */
 .fs-menu.open .menu-item {
   transform: translateX(0);
   opacity: 1;
