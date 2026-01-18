@@ -4,7 +4,10 @@ import "./Hero.css";
 export default function Hero() {
   return (
     <section className="hero" id="hero">
-      <Parallax />
+      <Parallax
+        title="Punk i Apart"
+        subtitle="NOU TEMA • EL GRUP • MÚSICA"
+      />
     </section>
   );
 }
